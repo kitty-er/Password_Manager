@@ -5,9 +5,11 @@ import secrets
 import string
 from pathlib import Path
 from typing import Any
+
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 
 class PasswordManager:
     ITERATIONS = 600_000

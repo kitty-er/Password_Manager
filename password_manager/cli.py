@@ -1,7 +1,9 @@
 import argparse
 import getpass
 from pathlib import Path
+
 from password_manager.manager import PasswordManager
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Локальный менеджер паролей")
