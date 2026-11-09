@@ -22,6 +22,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="длина генерируемого пароля (по умолчанию 20)",
     )
     return parser
+
+
 def run_menu(manager: PasswordManager) -> None:
     while True:
         print("\n===== PASSWORD MANAGER =====")
@@ -73,6 +75,8 @@ def run_menu(manager: PasswordManager) -> None:
                 print("Выбери пункт от 1 до 6.")
         except (ValueError, RuntimeError, OSError) as error:
             print(f"Ошибка: {error}")
+
+
 def main() -> None:
     args = build_parser().parse_args()
     if args.generate:
@@ -102,6 +106,7 @@ def main() -> None:
             return
         print("Вход выполнен.")
     run_menu(manager)
+
 
 if __name__ == "__main__":
     main()

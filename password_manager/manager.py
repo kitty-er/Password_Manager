@@ -14,10 +14,12 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class PasswordManager:
     ITERATIONS = 600_000
     MIN_MASTER_LENGTH = 8
+
     def __init__(self, vault_path: str | Path = "vault.json") -> None:
         self.vault_path = Path(vault_path)
         self._fernet: Fernet | None = None
         self._entries: dict[str, dict[str, str]] = {}
+
     @staticmethod
     def _derive_keys(password: str, salt: bytes) -> tuple[str, bytes]:
         kdf = PBKDF2HMAC(
@@ -30,6 +32,7 @@ class PasswordManager:
         password_hash = material[:32].hex()
         encryption_key = base64.urlsafe_b64encode(material[32:])
         return password_hash, encryption_key
+
     def init_master(self, password: str) -> None:
         if self.vault_path.exists():
             raise FileExistsError("Хранилище уже существует.")
@@ -40,6 +43,7 @@ class PasswordManager:
         self._fernet = Fernet(encryption_key)
         self._entries = {}
         self._persist_new_vault(salt, password_hash)
+
     def _persist_new_vault(self, salt: bytes, password_hash: str) -> None:
         if self._fernet is None:
             raise RuntimeError("Сначала необходимо создать хранилище.")
@@ -50,6 +54,7 @@ class PasswordManager:
             "data": encrypted_data,
         }
         self._write_vault(vault)
+
     def _write_vault(self, vault: dict[str, str]) -> None:
         self.vault_path.parent.mkdir(parents=True, exist_ok=True)
         temporary_path = self.vault_path.with_suffix(self.vault_path.suffix + ".tmp")
@@ -58,6 +63,7 @@ class PasswordManager:
             encoding="utf-8",
         )
         temporary_path.replace(self.vault_path)
+
     def unlock(self, password: str) -> bool:
         if not self.vault_path.exists():
             return False
@@ -100,10 +106,12 @@ class PasswordManager:
             return True
         except (OSError, ValueError, TypeError, KeyError, InvalidToken):
             return False
+
     def _require_unlocked(self) -> Fernet:
         if self._fernet is None:
             raise RuntimeError("Сначала войдите в хранилище.")
         return self._fernet
+
     def add_entry(self, name: str, login: str, pwd: str) -> None:
         fernet = self._require_unlocked()
         clean_name = name.strip()
@@ -115,13 +123,16 @@ class PasswordManager:
             raise ValueError("Пароль не может быть пустым.")
         self._entries[clean_name] = {"login": login, "password": pwd}
         self._persist(fernet)
+
     def list_entries(self) -> list[str]:
         self._require_unlocked()
         return sorted(self._entries)
+
     def get_entry(self, name: str) -> dict[str, str] | None:
         self._require_unlocked()
         entry = self._entries.get(name)
         return dict(entry) if entry is not None else None
+
     def delete_entry(self, name: str) -> bool:
         fernet = self._require_unlocked()
         if name not in self._entries:
@@ -129,6 +140,7 @@ class PasswordManager:
         del self._entries[name]
         self._persist(fernet)
         return True
+
     def _persist(self, fernet: Fernet | None = None) -> None:
         active_fernet = fernet if fernet is not None else self._require_unlocked()
         vault: Any = json.loads(self.vault_path.read_text(encoding="utf-8"))
@@ -137,6 +149,7 @@ class PasswordManager:
         ).decode("utf-8")
         vault["data"] = encrypted_data
         self._write_vault(vault)
+
     @staticmethod
     def generate_password(length: int = 20) -> str:
         if length < 12:
